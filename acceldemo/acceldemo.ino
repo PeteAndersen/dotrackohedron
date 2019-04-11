@@ -34,30 +34,35 @@ void setup(void) {
 }
 
 void loop() {
+  uint8_t r, g, b;
   lis.read();      // get X Y and Z data at once
 
   /* Or....get a new sensor event, normalized */ 
   sensors_event_t event; 
   lis.getEvent(&event);
+
+  r = scaleAccelToColor(event.acceleration.x);
+  g = scaleAccelToColor(event.acceleration.y);
+  b = scaleAccelToColor(event.acceleration.z);
+
+  pixels.setPixelColor(0, pixels.Color(r, g, b));
+  pixels.show();
   
   /* Display the results (acceleration is measured in m/s^2) */
-  Serial.print("X: "); Serial.print(event.acceleration.x);
-  Serial.print("\tY: "); Serial.print(event.acceleration.y); 
-  Serial.print("\tZ: "); Serial.print(event.acceleration.z); 
-  Serial.println(" m/s^2 ");
+  Serial.print("rgb: "); Serial.print(r);
+  Serial.print(", "); Serial.print(g);
+  Serial.print(", "); Serial.print(b);
+  Serial.print("\t\tX: "); Serial.print(event.acceleration.x);
+  Serial.print(" \tY: "); Serial.print(event.acceleration.y); 
+  Serial.print(" \tZ: "); Serial.print(event.acceleration.z); 
   Serial.println();
   
-  pixels.setPixelColor(0, pixels.Color(
-    scaleAccelToColor(event.acceleration.x),
-    scaleAccelToColor(event.acceleration.y),
-    scaleAccelToColor(event.acceleration.z)
-  ));
-  pixels.show();
   delay(50);
 }
 
 uint8_t scaleAccelToColor(float accel) {
-  float m = (0 - MAX_BRIGHTNESS) / (-SENSORS_GRAVITY_EARTH - SENSORS_GRAVITY_EARTH);
+  float clamped_accel = max(min(accel, SENSORS_GRAVITY_EARTH), -SENSORS_GRAVITY_EARTH);
+  float m = (0.0 - MAX_BRIGHTNESS) / (-SENSORS_GRAVITY_EARTH - SENSORS_GRAVITY_EARTH);
   float b = m * SENSORS_GRAVITY_EARTH;
-  return m * accel + b;x
+  return m * clamped_accel + b;
 }
